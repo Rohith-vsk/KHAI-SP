@@ -4,7 +4,7 @@ import json
 import os
 from azure.identity import ClientSecretCredential
 from azure.keyvault.secrets import SecretClient
-import openai
+from openai import AzureOpenAI
 import requests #for Azure Search
 
 # Load Environment Variables
@@ -17,14 +17,24 @@ client_secret = os.getenv("AZURE_CLIENT_SECRET")
 
 credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
 client = SecretClient(vault_url=key_vault_url,credential=credential)
+token = credential.get_token("https://cognitiveservices.azure.com/.default")
 
 # Retrieve secrets from KeyVault using secret names stored in Environment Variables
-openai.api_type = "azure"
-openai.api_key = client.get_secret(os.getenv("AZURE_OPENAI_KEY_NAME")).value
-openai.api_base = client.get_secret(os.getenv("AZURE_OPENAI_ENDPOINT_NAME")).value
-openai.api_version = client.get_secret(os.getenv("AZURE_OPENAI_VERSION_NAME")).value
+api_type = "azure"
+api_base = client.get_secret(os.getenv("AZURE_OPENAI_ENDPOINT_NAME")).value
+api_endpoint = client.get_secret(os.getenv("AZURE_OPENAI_ENDPOINT_NAME")).value
+api_version = client.get_secret(os.getenv("AZURE_OPENAI_VERSION_NAME")).value
 deployment_id = client.get_secret(os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")).value
 
+
+# Initialize Azure OpenAI client with Entra ID authentication
+
+
+openai_client = AzureOpenAI(
+    azure_endpoint=api_endpoint,
+    azure_ad_token_provider=token.token,
+    api_version=api_version,
+)
 
 # Azure Search config
 search_service = client.get_secret(os.getenv("AZURE_SEARCH_SERVICE_NAME")).value
@@ -48,14 +58,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if use_search:
             search_results = query_azure_search(search_query, search_service, search_index, search_api_key)
 
-        response = openai.ChatCompletion.create(
-            engine=deployment_id,
+        response = openai_client.chat.completions.create(
+            model=deployment_id,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": query}
             ]
         )
-
         reply = response['choices'][0]['message']['content']
         return func.HttpResponse(json.dumps({"response": reply,"search_results": search_results}), mimetype="application/json")
 
