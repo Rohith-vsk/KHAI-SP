@@ -20,7 +20,7 @@ client = SecretClient(vault_url=key_vault_url,credential=credential)
 
 # Retrieve secrets from KeyVault using secret names stored in Environment Variables
 openai.api_type = "azure"
-openai.api_key = client.get_secret(os.getenv("AZURE_OPENAI_KEY_NAME")).value
+#openai.api_key = client.get_secret(os.getenv("AZURE_OPENAI_KEY_NAME")).value
 openai.api_base = client.get_secret(os.getenv("AZURE_OPENAI_ENDPOINT_NAME")).value
 openai.api_version = client.get_secret(os.getenv("AZURE_OPENAI_VERSION_NAME")).value
 deployment_id = client.get_secret(os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")).value
