@@ -5,10 +5,17 @@
         "id": "Microsoft.Azure.Functions.ExtensionBundle",
         "version": "[4.*, 5.0.0)"
     },
-    "logging": {
-    "logLevel": {
-      "Function": "Information",
-      "Host.Results": "Error"
+    
+"logging": {
+  "applicationInsights": {
+    "samplingSettings": {
+      "isEnabled": true,
+      "maxTelemetryItemsPerSecond" : 5
     }
+  },
+  "logLevel": {
+    "Function": "Debug"
+  }
 }
+
 }
