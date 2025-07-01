@@ -17,11 +17,13 @@ client_secret = os.getenv("AZURE_CLIENT_SECRET")
 
 credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
 client = SecretClient(vault_url=key_vault_url,credential=credential)
-token = credential.get_token("https://cognitiveservices.azure.com/.default")
+
+def token_provider():
+    token = credential.get_token("https://cognitiveservices.azure.com/.default")
+    return token.token
 
 # Retrieve secrets from KeyVault using secret names stored in Environment Variables
 api_type = "azure"
-api_base = client.get_secret(os.getenv("AZURE_OPENAI_ENDPOINT_NAME")).value
 api_endpoint = client.get_secret(os.getenv("AZURE_OPENAI_ENDPOINT_NAME")).value
 api_version = client.get_secret(os.getenv("AZURE_OPENAI_VERSION_NAME")).value
 deployment_id = client.get_secret(os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")).value
@@ -32,7 +34,7 @@ deployment_id = client.get_secret(os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")).val
 
 openai_client = AzureOpenAI(
     azure_endpoint=api_endpoint,
-    azure_ad_token_provider=token.token,
+    azure_ad_token_provider=token_provider,
     api_version=api_version,
 )
 
@@ -65,7 +67,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 {"role": "user", "content": query}
             ]
         )
-        reply = response['choices'][0]['message']['content']
+        reply = response.choices[0].message.content
         return func.HttpResponse(json.dumps({"response": reply,"search_results": search_results}), mimetype="application/json")
 
     except Exception as e:
