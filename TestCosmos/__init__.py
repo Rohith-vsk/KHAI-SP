@@ -15,11 +15,14 @@ credential = ManagedIdentityCredential()
 client = CosmosClient(cosmos_endpoint, credential=credential)
 
 # Ensure database and container exist
-database = client.create_database_if_not_exists(id=database_name, offer_throughput=1000)
+'''database = client.create_database_if_not_exists(id=database_name, offer_throughput=1000)
 container = database.create_container_if_not_exists(
     id=container_name,
     partition_key=PartitionKey(path="/category")
-)
+)'''
+
+database = client.get_database_client(id=database_name)
+container = database.get_container_client(id=container_name,partition_key=PartitionKey(path="/category"))
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     method = req.method
