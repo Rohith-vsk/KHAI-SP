@@ -39,9 +39,9 @@ openai_client = AzureOpenAI(
 )
 
 # Azure Search config
-search_service = client.get_secret(os.getenv("AZURE_SEARCH_SERVICE_NAME")).value
-search_index = client.get_secret(os.getenv("AZURE_SEARCH_INDEX_NAME")).value
-search_api_key = client.get_secret(os.getenv("AZURE_SEARCH_API_KEY_NAME")).value
+#search_service = client.get_secret(os.getenv("AZURE_SEARCH_SERVICE_NAME")).value
+#search_index = client.get_secret(os.getenv("AZURE_SEARCH_INDEX_NAME")).value
+#search_api_key = client.get_secret(os.getenv("AZURE_SEARCH_API_KEY_NAME")).value
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -50,15 +50,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         req_body = req.get_json()
         query = req_body.get("query")
-        search_query = req_body.get("searchQuery")
-        use_search = req_body.get("use_search", False)
+        #search_query = req_body.get("searchQuery")
+        #use_search = req_body.get("use_search", False)
 
         if not query:
             return func.HttpResponse("Missing 'query' in request body.", status_code=400)
         
-        search_results = None
-        if use_search:
-            search_results = query_azure_search(search_query, search_service, search_index, search_api_key)
+        #search_results = None
+        #if use_search:
+        #    search_results = query_azure_search(search_query, search_service, search_index, search_api_key)
 
         response = openai_client.chat.completions.create(
             model=deployment_id,
@@ -68,7 +68,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             ]
         )
         reply = response.choices[0].message.content
-        return func.HttpResponse(json.dumps({"response": reply,"search_results": search_results}), mimetype="application/json")
+        #return func.HttpResponse(json.dumps({"response": reply,"search_results": search_results}), mimetype="application/json")
+        return func.HttpResponse(json.dumps({"response": reply}), mimetype="application/json")
 
     except Exception as e:
         logging.error(f"Error: {str(e)}")
@@ -76,7 +77,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
 
 #Query Azure AI Search
-
+'''
 
 def query_azure_search(query_text: str, search_service: str, index_name: str, api_key: str):
     url = f"https://{search_service}.search.windows.net/indexes/{index_name}/docs/search?api-version=2023-11-01"
@@ -92,3 +93,5 @@ def query_azure_search(query_text: str, search_service: str, index_name: str, ap
     response = requests.post(url, headers=headers, json=payload)
     response.raise_for_status()
     return response.json()
+
+    '''
