@@ -33,10 +33,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         search_query = req.params.get("searchQuery")
         use_search = req.params.get("useSearch")
-        '''
-        req_body = req.get_json()
-        search_query = req_body.get("searchQuery")
-        use_search = req_body.get("use_search", False)'''
+        
 
         if not search_query:
             return func.HttpResponse("Missing 'search_query' in request body.", status_code=400)
