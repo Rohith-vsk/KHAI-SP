@@ -18,6 +18,8 @@ credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, cl
 client = SecretClient(vault_url=key_vault_url,credential=credential)
 
 
+token = credential.get_token("https://search.azure.com/.default").token
+
 
 # Azure Search config
 search_service = client.get_secret(os.getenv("AZURE_SEARCH_SERVICE_NAME")).value
@@ -29,16 +31,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("Processing AI Search request.")
 
     try:
+        search_query = req.params.get("searchQuery")
+        use_search = req.params.get("useSearch")
+        '''
         req_body = req.get_json()
         search_query = req_body.get("searchQuery")
-        use_search = req_body.get("use_search", False)
+        use_search = req_body.get("use_search", False)'''
 
         if not search_query:
             return func.HttpResponse("Missing 'search_query' in request body.", status_code=400)
         
         search_results = None
         if use_search:
-            search_results = query_azure_search(search_query, search_service, search_index, search_api_key)
+            search_results = query_azure_search(search_query, search_service, search_index, token)
 
 
         return func.HttpResponse(json.dumps({"search_results": search_results}), mimetype="application/json")
@@ -51,11 +56,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 #Query Azure AI Search
 
 
-def query_azure_search(query_text: str, search_service: str, index_name: str, api_key: str):
+def query_azure_search(query_text: str, search_service: str, index_name: str, token: str):
     url = f"https://{search_service}.search.windows.net/indexes/{index_name}/docs/search?api-version=2023-11-01"
     headers = {
         "Content-Type": "application/json",
-        "api-key": api_key
+        "Authorization": f"Bearer {token}"
     }
     payload = {
         "search": query_text,
