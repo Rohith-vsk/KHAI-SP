@@ -3,7 +3,7 @@ import azure.functions as func
 import json
 import os
 from azure.cosmos import CosmosClient, PartitionKey
-from azure.identity import DefaultAzureCredential
+from azure.identity import ManagedIdentityCredential
 
 # Cosmos DB configuration
 cosmos_endpoint = os.getenv("COSMOS_DB_ENDPOINT")
@@ -11,7 +11,7 @@ database_name = "TestDb"
 container_name = "TestContainer"
 
 # Use managed identity
-credential = DefaultAzureCredential()
+credential = ManagedIdentityCredential()
 client = CosmosClient(cosmos_endpoint, credential=credential)
 
 # Ensure database and container exist
@@ -37,9 +37,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             # Retrieve sample document
             req_body = req.get_json()
             id = req_body.get("id")
-            PartitionKey = req_body.get("category")
+            partition_key_value = req_body.get("category")
 
-            item = container.read_item(item=id, partition_key=PartitionKey)
+            item = container.read_item(item=id, partition_key=partition_key_value)
             return func.HttpResponse(json.dumps(item), mimetype="application/json")
 
         else:
