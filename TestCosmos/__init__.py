@@ -15,11 +15,10 @@ credential = DefaultAzureCredential()
 client = CosmosClient(cosmos_endpoint, credential=credential)
 
 # Ensure database and container exist
-database = client.create_database_if_not_exists(id=database_name)
+database = client.create_database_if_not_exists(id=database_name, offer_throughput=1000)
 container = database.create_container_if_not_exists(
     id=container_name,
-    partition_key=PartitionKey(path="/category"),
-    offer_throughput=400
+    partition_key=PartitionKey(path="/category")
 )
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
