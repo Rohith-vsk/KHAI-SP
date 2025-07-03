@@ -37,10 +37,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse("Sample document inserted.", status_code=200)
 
         elif method == "GET":
-            # Retrieve sample document
-            req_body = req.get_json()
-            id = req_body.get("id")
-            partition_key_value = req_body.get("category")
+            # Retrieve sample document using query parameters
+            id = req.params.get("id")
+            partition_key_value = req.params.get("category")
+
+            if not id or not partition_key_value:
+                return func.HttpResponse("Missing 'id' or 'category' query parameters.", status_code=400)
 
             item = container.read_item(item=id, partition_key=partition_key_value)
             return func.HttpResponse(json.dumps(item), mimetype="application/json")
