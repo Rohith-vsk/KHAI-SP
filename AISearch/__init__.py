@@ -5,9 +5,12 @@ import os
 from azure.identity import ClientSecretCredential
 from azure.keyvault.secrets import SecretClient
 import requests #for Azure Search
+import httpx
 
 # Load Environment Variables
 key_vault_url = os.getenv("KEYVAULT_URL")
+spn_key_vault_url = os.getenv("SPN_KEYVAULT_URL")
+
 
 # Initialize credential and Key Vault client
 tenant_id = os.getenv("AZURE_TENANT_ID")
@@ -15,16 +18,26 @@ client_id = os.getenv("AZURE_CLIENT_ID")
 client_secret = os.getenv("AZURE_CLIENT_SECRET")
 
 credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
-client = SecretClient(vault_url=key_vault_url,credential=credential)
+kv_client = SecretClient(vault_url=key_vault_url,credential=credential)
+spn_kv_client = SecretClient(vault_url=spn_key_vault_url,credential=credential)
+
+# Scope is required to generate the right oauth token. 
+# Please check with MLOps platform team if you see any issue
+SCOPE = kv_client.get_secret(os.getenv("AZURE_BACKEND_SCOPE")).value
 
 
-token = credential.get_token("https://search.azure.com/.default").token
+#token = credential.get_token("https://search.azure.com/.default").token
+
+token = credential.get_token(SCOPE).token
+
+
+
 
 
 # Azure Search config
-search_service = client.get_secret(os.getenv("AZURE_SEARCH_SERVICE_NAME")).value
-search_index = client.get_secret(os.getenv("AZURE_SEARCH_INDEX_NAME")).value
-search_api_key = client.get_secret(os.getenv("AZURE_SEARCH_API_KEY_NAME")).value
+search_service = kv_client.get_secret(os.getenv("AZURE_SEARCH_SERVICE_NAME")).value
+search_index = os.getenv("AZURE_SEARCH_INDEX_NAME")
+#search_api_key = kv_client.get_secret(os.getenv("AZURE_SEARCH_API_KEY_NAME")).value
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:

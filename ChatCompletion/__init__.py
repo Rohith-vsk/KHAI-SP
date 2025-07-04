@@ -28,7 +28,7 @@ spn_kv_client = SecretClient(vault_url=spn_key_vault_url,credential=credential)
 
 # Scope is required to generate the right oauth token. 
 # Please check with MLOps platform team if you see any issue
-SCOPE = os.getenv("AZURE_BACKEND_SCOPE")
+SCOPE = kv_client.get_secret(os.getenv("AZURE_BACKEND_SCOPE")).value
 
 #def token_provider():
 #    token = credential.get_token("https://cognitiveservices.azure.com/.default")

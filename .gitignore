@@ -2,8 +2,10 @@ local.settings.json
 
 #ignore the extended chat logging fucntionality
 HandleConversation/
-AISearch/
+
+#ignore cosmos as well
 TestCosmos/
+
 .python_packages
 __pycache__
 .venv
