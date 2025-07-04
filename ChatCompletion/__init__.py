@@ -6,36 +6,51 @@ from azure.identity import ClientSecretCredential
 from azure.keyvault.secrets import SecretClient
 from openai import AzureOpenAI
 import requests #for Azure Search
+import httpx
 
 # Load Environment Variables
-key_vault_url = os.getenv("KEYVAULT_URL")
+
+
 
 # Initialize credential and Key Vault client
 tenant_id = os.getenv("AZURE_TENANT_ID")
 client_id = os.getenv("AZURE_CLIENT_ID")
 client_secret = os.getenv("AZURE_CLIENT_SECRET")
 
-credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
-client = SecretClient(vault_url=key_vault_url,credential=credential)
+key_vault_url = os.getenv("KEYVAULT_URL")
+spn_key_vault_url = os.getenv("SPN_KEYVAULT_URL")
 
-def token_provider():
-    token = credential.get_token("https://cognitiveservices.azure.com/.default")
-    return token.token
+credential = ClientSecretCredential(tenant_id=tenant_id, client_id=client_id, client_secret=client_secret)
+kv_client = SecretClient(vault_url=key_vault_url,credential=credential)
+spn_kv_client = SecretClient(vault_url=spn_key_vault_url,credential=credential)
+
+
+
+# Scope is required to generate the right oauth token. 
+# Please check with MLOps platform team if you see any issue
+SCOPE = os.getenv("AZURE_BACKEND_SCOPE")
+
+#def token_provider():
+#    token = credential.get_token("https://cognitiveservices.azure.com/.default")
+#    return token.token
+
+token = credential.get_token(SCOPE).token
 
 # Retrieve secrets from KeyVault using secret names stored in Environment Variables
-api_type = "azure"
-api_endpoint = client.get_secret(os.getenv("AZURE_OPENAI_ENDPOINT_NAME")).value
-api_version = client.get_secret(os.getenv("AZURE_OPENAI_VERSION_NAME")).value
-deployment_id = client.get_secret(os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")).value
+api_endpoint = kv_client.get_secret(os.getenv("AZURE_OPENAI_ENDPOINT_NAME")).value
+api_version = kv_client.get_secret(os.getenv("AZURE_OPENAI_VERSION_NAME")).value
+deployment_id = kv_client.get_secret(os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")).value
 
 
 # Initialize Azure OpenAI client with Entra ID authentication
 
 
 openai_client = AzureOpenAI(
-    azure_endpoint=api_endpoint,
-    azure_ad_token_provider=token_provider,
-    api_version=api_version,
+    base_url=api_endpoint,
+    azure_ad_token=token,
+    api_version=api_version, #You can use the latest api version
+    #make sure you use this to suppress the SSL certificate verification
+    http_client = httpx.Client(verify = False)
 )
 
 
