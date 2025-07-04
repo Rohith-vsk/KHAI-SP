@@ -2,3 +2,5 @@ local.settings.json
 
 #ignore the extended chat logging fucntionality
 HandleConversation/
+AISearch/
+TestCosmos/
