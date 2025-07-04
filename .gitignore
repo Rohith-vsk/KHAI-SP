@@ -4,3 +4,6 @@ local.settings.json
 HandleConversation/
 AISearch/
 TestCosmos/
+.python_packages
+__pycache__
+.venv
