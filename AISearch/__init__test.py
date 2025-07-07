@@ -23,7 +23,7 @@ spn_kv_client = SecretClient(vault_url=spn_key_vault_url,credential=credential)
 
 # Scope is required to generate the right oauth token. 
 # Please check with MLOps platform team if you see any issue
-SCOPE = kv_client.get_secret(os.getenv("AZURE_BACKEND_SCOPE")).value
+SCOPE = (os.getenv("AZURE_BACKEND_SCOPE"))
 
 
 token = credential.get_token("https://search.azure.com/.default").token
@@ -35,7 +35,7 @@ token = credential.get_token("https://search.azure.com/.default").token
 
 
 # Azure Search config
-search_service = kv_client.get_secret(os.getenv("AZURE_SEARCH_SERVICE_NAME")).value
+search_service = (os.getenv("AZURE_SEARCH_SERVICE_NAME"))
 search_index = os.getenv("AZURE_SEARCH_INDEX_NAME")
 #search_api_key = kv_client.get_secret(os.getenv("AZURE_SEARCH_API_KEY_NAME")).value
 
